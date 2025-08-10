@@ -1,0 +1,50 @@
+#####################################################################
+PASO 1: CREAR PROYECTO LOCAL
+#####################################################################
+
+# Ir al directorio donde tienes tus proyectos
+cd "C:\Djangoprojects\punto_venta_abarrotes"
+
+# Crear directorio del nuevo proyecto
+mkdir punto-venta-abarrotes
+cd punto-venta-abarrotes
+
+# Crear entorno virtual
+python -m venv venv
+
+# Activar entorno virtual (Windows)
+venv\Scripts\activate
+
+# Instalar Django
+pip install Django==4.2.0 djangorestframework==3.14.0 python-decouple==3.8
+
+# Crear proyecto Django
+django-admin startproject punto_venta .
+
+# Crear las apps
+python manage.py startapp productos
+python manage.py startapp ventas
+python manage.py startapp inventario
+
+# Crear directorios adicionales
+mkdir templates
+mkdir static
+mkdir static\css
+mkdir static\js
+mkdir static\img
+mkdir pwa
+mkdir apps
+
+# Mover apps a directorio apps
+move productos apps\
+move ventas apps\
+move inventario apps\
+
+Crear estructura de carpetas:
+
+# En apps, crear archivos __init__.py
+echo. > apps\__init__.py
+echo. > apps\productos\__init__.py
+echo. > apps\ventas\__init__.py
+echo. > apps\inventario\__init__.py
+

@@ -1,0 +1,54 @@
+#####################################################################
+PASO 4: CONFIGURAR ADMIN BÁSICO
+#####################################################################
+
+Editar apps/productos/admin.py:
+from django.contrib import admin
+from .models import Producto
+
+@admin.register(Producto)
+class ProductoAdmin(admin.ModelAdmin):
+    list_display = ('codigo', 'nombre', 'precio_venta', 'stock_actual', 'necesita_restock', 'activo')
+    list_filter = ('activo', 'fecha_creacion')
+    search_fields = ('codigo', 'nombre')
+    ordering = ('nombre',)
+    
+    def necesita_restock(self, obj):
+        return obj.necesita_restock
+    necesita_restock.boolean = True
+    necesita_restock.short_description = 'Necesita Restock'
+    
+Editar apps/ventas/admin.py:
+from django.contrib import admin
+from .models import Venta, DetalleVenta
+
+class DetalleVentaInline(admin.TabularInline):
+    model = DetalleVenta
+    extra = 0
+
+@admin.register(Venta)
+class VentaAdmin(admin.ModelAdmin):
+    list_display = ('numero_venta', 'fecha', 'total', 'sincronizado')
+    list_filter = ('fecha', 'sincronizado')
+    search_fields = ('numero_venta',)
+    ordering = ('-fecha',)
+    inlines = [DetalleVentaInline]
+
+@admin.register(DetalleVenta)
+class DetalleVentaAdmin(admin.ModelAdmin):
+    list_display = ('venta', 'producto', 'cantidad', 'precio_unitario', 'subtotal')
+    list_filter = ('venta__fecha',)
+
+
+
+#####################################################################   
+PASO 5: AGREGAR PRODUCTOS DE PRUEBA
+#####################################################################   
+
+Una vez que tengas acceso al admin, agrega algunos productos de ejemplo:
+
+Coca Cola 600ml - Código: CC600 - Precio: $18.00
+Sabritas Clásicas - Código: SAB001 - Precio: $15.00
+Leche Lala 1L - Código: LALA1L - Precio: $25.00
+Pan Bimbo Grande - Código: PAN001 - Precio: $35.00
+Huevos 12 piezas - Código: HUEV12 - Precio: $45.00

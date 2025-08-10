@@ -1,0 +1,82 @@
+#####################################################################
+PASO 3: CREAR MODELOS BÁSICOS
+#####################################################################
+
+apps/productos/models.py:
+
+from django.db import models
+
+class Producto(models.Model):
+    codigo = models.CharField(max_length=50, unique=True, verbose_name="Código")
+    nombre = models.CharField(max_length=200, verbose_name="Nombre")
+    descripcion = models.TextField(blank=True, verbose_name="Descripción")
+    precio_compra = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de compra")
+    precio_venta = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio de venta")
+    stock_actual = models.IntegerField(default=0, verbose_name="Stock actual")
+    stock_minimo = models.IntegerField(default=5, verbose_name="Stock mínimo")
+    activo = models.BooleanField(default=True, verbose_name="Activo")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Producto"
+        verbose_name_plural = "Productos"
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.nombre}"
+    
+    @property
+    def necesita_restock(self):
+        return self.stock_actual <= self.stock_minimo
+        
+apps/ventas/models.py:
+
+from django.db import models
+from apps.productos.models import Producto
+
+class Venta(models.Model):
+    numero_venta = models.CharField(max_length=20, unique=True, verbose_name="Número de venta")
+    fecha = models.DateTimeField(auto_now_add=True, verbose_name="Fecha")
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Total")
+    efectivo_recibido = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Efectivo recibido")
+    cambio = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Cambio")
+    sincronizado = models.BooleanField(default=False, verbose_name="Sincronizado")
+    
+    class Meta:
+        verbose_name = "Venta"
+        verbose_name_plural = "Ventas"
+        ordering = ['-fecha']
+    
+    def __str__(self):
+        return f"Venta {self.numero_venta} - ${self.total}"
+
+class DetalleVenta(models.Model):
+    venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.IntegerField(verbose_name="Cantidad")
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio unitario")
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Subtotal")
+    
+    class Meta:
+        verbose_name = "Detalle de venta"
+        verbose_name_plural = "Detalles de venta"
+        
+    def save(self, *args, **kwargs):
+        self.subtotal = self.cantidad * self.precio_unitario
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f"{self.cantidad}x {self.producto.nombre}"
+
+
+#####################################################################
+
+PROBAR LOCALMENTE
+# Hacer migraciones
+python manage.py makemigrations
+python manage.py migrate
+
+# Crear superusuario
+python manage.py createsuperuser
+
+# Probar que funciona
+python manage.py runserver

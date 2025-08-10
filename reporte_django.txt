@@ -1,0 +1,29 @@
+REPORTE PROYECTO DJANGO
+Ruta: C:\Djangoprojects\punto_venta_abarrotes
+Tipo: all
+Generado el: 2025-08-09 21:35:24
+============================================================
+
+CONFIGURACIONES DEL PROYECTO
+========================================
+
+CONFIGURACIONES PRINCIPALES:
+  - DEBUG: True
+  - DATABASES: django.db.backends.sqlite3
+  - STATIC_URL: static/
+  - INSTALLED_APPS:
+    * django.contrib.admin
+    * django.contrib.auth
+    * django.contrib.contenttypes
+    * django.contrib.sessions
+    * django.contrib.messages
+    * django.contrib.staticfiles
+  - MIDDLEWARE:
+    * django.middleware.security.SecurityMiddleware
+    * django.contrib.sessions.middleware.SessionMiddleware
+    * django.middleware.common.CommonMiddleware
+    * django.middleware.csrf.CsrfViewMiddleware
+    * django.contrib.auth.middleware.AuthenticationMiddleware
+    * django.contrib.messages.middleware.MessageMiddleware
+    * django.middleware.clickjacking.XFrameOptionsMiddleware
+
