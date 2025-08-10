@@ -486,8 +486,6 @@ def generar_reporte_django(ruta_proyecto, tipo='all'):
     
     print(f"Reporte Django guardado en: {nombre_archivo}")
 
-# Configuración
-ruta_proyecto = r"C:\Djangoprojects\punto_venta_abarrotes"
 
 # Opciones disponibles:
 # - 'all': Todo (models, admin, forms, views, urls, settings)
@@ -499,4 +497,4 @@ ruta_proyecto = r"C:\Djangoprojects\punto_venta_abarrotes"
 # - 'settings': Solo configuraciones
 
 # Generar reporte completo
-generar_reporte_django(ruta_proyecto, tipo='all')
+generar_reporte_django(ruta_raiz, tipo='all')

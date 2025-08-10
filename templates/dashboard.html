@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Punto de Venta{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-line"></i> Dashboard
+            <small class="text-muted">Resumen del día</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Tarjetas de estadísticas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category text-muted">Productos Totales</p>
+                        <h3 class="card-title">{{ productos_total }}</h3>
+                    </div>
+                    <div class="text-primary">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category text-muted">Stock Bajo</p>
+                        <h3 class="card-title text-warning">{{ productos_bajo_stock }}</h3>
+                    </div>
+                    <div class="text-warning">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category text-muted">Ventas Hoy</p>
+                        <h3 class="card-title text-success">{{ ventas_hoy_count }}</h3>
+                    </div>
+                    <div class="text-success">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card card-stats">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="card-category text-muted">Total Vendido</p>
+                        <h3 class="card-title text-info">${{ total_ventas_hoy|floatformat:2 }}</h3>
+                    </div>
+                    <div class="text-info">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones rápidas -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt"></i> Acciones Rápidas
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <a href="{% url 'punto_venta' %}" class="btn btn-primary btn-pos me-3">
+                    <i class="fas fa-cash-register"></i> Abrir Punto de Venta
+                </a>
+                <a href="/admin/" class="btn btn-secondary btn-pos me-3">
+                    <i class="fas fa-cog"></i> Administración
+                </a>
+                <a href="/admin/productos/producto/" class="btn btn-outline-primary btn-pos">
+                    <i class="fas fa-plus"></i> Agregar Producto
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas de stock bajo -->
+{% if productos_bajo_stock > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <h5 class="alert-heading">
+                <i class="fas fa-exclamation-triangle"></i> Atención: Stock Bajo
+            </h5>
+            <p class="mb-0">
+                Tienes {{ productos_bajo_stock }} producto{{ productos_bajo_stock|pluralize }} con stock bajo. 
+                <a href="/admin/productos/producto/?stock_actual__lte=5" class="alert-link">Ver productos</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

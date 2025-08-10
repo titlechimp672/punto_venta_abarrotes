@@ -41,4 +41,13 @@ urlpatterns = [
 PASO 7: PROBAR TODO
 
 # Reiniciar servidor
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8002
+
+Todo funciona. 
+Cuando estamos en el servidor, ejecutamos:
+
+http://192.241.129.202:8002/admin/login/?next=/admin/
+
+Cuando estamos en de manera local, ejecutamos:
+
+http://127.0.0.1:8002/admin/

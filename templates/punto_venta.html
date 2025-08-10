@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block title %}Punto de Venta{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-cash-register"></i> Punto de Venta
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Lista de productos -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-box"></i> Productos Disponibles
+                </h5>
+                <input type="text" id="buscar-producto" class="form-control mt-2" placeholder="Buscar producto...">
+            </div>
+            <div class="card-body" style="max-height: 600px; overflow-y: auto;">
+                <div class="row" id="productos-lista">
+                    {% for producto in productos %}
+                    <div class="col-md-4 mb-3 producto-item" data-nombre="{{ producto.nombre|lower }}">
+                        <div class="card producto-card" onclick="agregarAlCarrito({{ producto.id }}, '{{ producto.codigo }}', '{{ producto.nombre }}', {{ producto.precio_venta }})">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">{{ producto.nombre }}</h6>
+                                <p class="card-text">
+                                    <strong>{{ producto.codigo }}</strong><br>
+                                    <span class="text-success">${{ producto.precio_venta }}</span><br>
+                                    <small class="text-muted">Stock: {{ producto.stock_actual }}</small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <p class="text-center text-muted">No hay productos disponibles</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carrito -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-cart"></i> Carrito
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="carrito-items" style="max-height: 300px; overflow-y: auto;">
+                    <p class="text-center text-muted">Carrito vacío</p>
+                </div>
+                
+                <hr>
+                
+                <!-- Totales -->
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3 carrito-total">
+                    <span>Total:</span>
+                    <span id="total">$0.00</span>
+                </div>
+
+                <!-- Efectivo recibido -->
+                <div class="mb-3">
+                    <label for="efectivo" class="form-label">Efectivo recibido:</label>
+                    <input type="number" class="form-control" id="efectivo" placeholder="0.00" step="0.01" onchange="calcularCambio()">
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Cambio:</span>
+                    <span id="cambio" class="text-info">$0.00</span>
+                </div>
+
+                <!-- Botones -->
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" id="btn-procesar" onclick="procesarVenta()" disabled>
+                        <i class="fas fa-check"></i> Procesar Venta
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="limpiarCarrito()">
+                        <i class="fas fa-trash"></i> Limpiar Carrito
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="modalVenta" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Venta Procesada</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                <h4>¡Venta exitosa!</h4>
+                <p id="detalles-venta"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="nuevaVenta()">
+                    Nueva Venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let carrito = [];
+let totalCarrito = 0;
+
+// Buscar productos
+document.getElementById('buscar-producto').addEventListener('input', function() {
+    const filtro = this.value.toLowerCase();
+    const productos = document.querySelectorAll('.producto-item');
+    
+    productos.forEach(producto => {
+        const nombre = producto.getAttribute('data-nombre');
+        if (nombre.includes(filtro)) {
+            producto.style.display = 'block';
+        } else {
+            producto.style.display = 'none';
+        }
+    });
+});
+
+function agregarAlCarrito(id, codigo, nombre, precio) {
+    const existente = carrito.find(item => item.id === id);
+    
+    if (existente) {
+        existente.cantidad++;
+    } else {
+        carrito.push({
+            id: id,
+            codigo: codigo,
+            nombre: nombre,
+            precio: precio,
+            cantidad: 1
+        });
+    }
+    
+    actualizarCarrito();
+}
+
+function removerDelCarrito(id) {
+    carrito = carrito.filter(item => item.id !== id);
+    actualizarCarrito();
+}
+
+function cambiarCantidad(id, nuevaCantidad) {
+    const item = carrito.find(item => item.id === id);
+    if (item) {
+        item.cantidad = parseInt(nuevaCantidad);
+        if (item.cantidad <= 0) {
+            removerDelCarrito(id);
+        } else {
+            actualizarCarrito();
+        }
+    }
+}
+
+function actualizarCarrito() {
+    const carritoDiv = document.getElementById('carrito-items');
+    
+    if (carrito.length === 0) {
+        carritoDiv.innerHTML = '<p class="text-center text-muted">Carrito vacío</p>';
+        totalCarrito = 0;
+    } else {
+        let html = '';
+        totalCarrito = 0;
+        
+        carrito.forEach(item => {
+            const subtotal = item.precio * item.cantidad;
+            totalCarrito += subtotal;
+            
+            html += `
+                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
+                    <div class="flex-grow-1">
+                        <small><strong>${item.codigo}</strong></small><br>
+                        <small>${item.nombre}</small><br>
+                        <small class="text-muted">$${item.precio} c/u</small>
+                    </div>
+                    <div class="text-end">
+                        <input type="number" class="form-control cantidad-input mb-1" 
+                               value="${item.cantidad}" min="1" 
+                               onchange="cambiarCantidad(${item.id}, this.value)">
+                        <small class="text-success">$${subtotal.toFixed(2)}</small><br>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removerDelCarrito(${item.id})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        carritoDiv.innerHTML = html;
+    }
+    
+    document.getElementById('subtotal').textContent = `$${totalCarrito.toFixed(2)}`;
+    document.getElementById('total').textContent = `$${totalCarrito.toFixed(2)}`;
+    
+    calcularCambio();
+    
+    // Habilitar/deshabilitar botón de procesar
+    document.getElementById('btn-procesar').disabled = carrito.length === 0;
+}
+
+function calcularCambio() {
+    const efectivo = parseFloat(document.getElementById('efectivo').value) || 0;
+    const cambio = efectivo - totalCarrito;
+    const cambioSpan = document.getElementById('cambio');
+    
+    cambioSpan.textContent = `$${cambio.toFixed(2)}`;
+    
+    if (cambio < 0) {
+        cambioSpan.className = 'text-danger';
+        document.getElementById('btn-procesar').disabled = true;
+    } else {
+        cambioSpan.className = 'text-info';
+        document.getElementById('btn-procesar').disabled = carrito.length === 0;
+    }
+}
+
+function limpiarCarrito() {
+    carrito = [];
+    document.getElementById('efectivo').value = '';
+    actualizarCarrito();
+}
+
+function procesarVenta() {
+    if (carrito.length === 0) {
+        alert('El carrito está vacío');
+        return;
+    }
+    
+    const efectivo = parseFloat(document.getElementById('efectivo').value) || 0;
+    if (efectivo < totalCarrito) {
+        alert('Efectivo insuficiente');
+        return;
+    }
+    
+    const data = {
+        productos: carrito.map(item => ({
+            producto_id: item.id,
+            cantidad: item.cantidad
+        })),
+        efectivo_recibido: efectivo
+    };
+    
+    fetch('/api/procesar-venta/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('detalles-venta').innerHTML = `
+                <strong>Número de venta:</strong> ${data.numero_venta}<br>
+                <strong>Total:</strong> $${data.total.toFixed(2)}<br>
+                <strong>Cambio:</strong> $${data.cambio.toFixed(2)}
+            `;
+            new bootstrap.Modal(document.getElementById('modalVenta')).show();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la venta');
+    });
+}
+
+function nuevaVenta() {
+    limpiarCarrito();
+    location.reload(); // Recargar para actualizar stock
+}
+</script>
+{% endblock %}

@@ -1,0 +1,101 @@
+#####################################################################
+ PASO 6: CONFIGURACIÓN SOLO PARA PUERTO 8002
+#####################################################################
+
+PASO 1: PREPARAR GUNICORN
+bash# Detener runserver si está corriendo
+Ctrl+C
+
+# Asegurarte de estar en el entorno virtual
+source venv/bin/activate
+
+# Instalar gunicorn
+pip install gunicorn
+
+# Actualizar requirements.txt
+pip freeze > requirements.txt
+
+PASO 2: PROBAR GUNICORN MANUALMENTE
+# Probar gunicorn manualmente
+gunicorn --workers 2 --bind 0.0.0.0:8002 punto_venta.wsgi:application
+
+Deberías ver:
+[INFO] Starting gunicorn 21.2.0
+[INFO] Listening at: http://0.0.0.0:8002
+[INFO] Using worker: sync
+[INFO] Booting worker with pid: XXXX
+
+PASO 3: VERIFICAR QUE FUNCIONA
+Desde tu navegador:
+http://192.241.129.202:8002/admin/
+
+Funciona correctamente
+
+CREAR EL ARCHIVO DE SERVICIO
+sudo nano /etc/systemd/system/punto-venta.service
+
+AGREGAR CONFIGURACIÓN
+Pega este contenido:
+[Unit]
+Description=Punto de Venta Django App
+After=network.target
+
+[Service]
+Type=exec
+User=root
+WorkingDirectory=/home/punto_venta_abarrotes
+Environment=PATH=/home/punto_venta_abarrotes/venv/bin
+ExecStart=/home/punto_venta_abarrotes/venv/bin/gunicorn --workers 2 --bind 0.0.0.0:8002 punto_venta.wsgi:application
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+RECARGAR Y ACTIVAR
+# Recargar systemd para que reconozca el nuevo servicio
+sudo systemctl daemon-reload
+
+# Habilitar el servicio para que inicie automáticamente
+sudo systemctl enable punto-venta.service
+
+# Iniciar el servicio
+sudo systemctl start punto-venta.service
+
+# Verificar el estado
+sudo systemctl status punto-venta.service
+
+VERIFICAR QUE EL SERVICIO FUNCIONA
+# Verificar estado del servicio
+sudo systemctl status punto-venta.service
+
+# Verificar que escucha en el puerto
+ss -tlnp | grep :8002
+
+# Verificar desde local del servidor
+curl -I http://127.0.0.1:8002/admin/
+# Resultado esperado: HTTP/1.1 302 Found (redirect a login)
+
+# Verificar desde tu navegador
+http://192.241.129.202:8002/admin/
+
+# Resultado: Página de login de Django admin
+
+COMANDOS DE MANTENIMIENTO
+# Reiniciar servicio (para futuros cambios)
+sudo systemctl restart punto-venta.service
+
+# Ver logs en tiempo real
+sudo journalctl -u punto-venta.service -f
+
+# Detener servicio
+sudo systemctl stop punto-venta.service
+
+# Ver estado rápido
+sudo systemctl is-active punto-venta.service
+
+ESTADO FINAL CONFIRMADO
+Servicio: punto-venta.service (activo y habilitado)
+Puerto: 8002 (gunicorn con 2 workers)
+Acceso: http://192.241.129.202:8002/admin/
+Auto-inicio: Habilitado (reinicia automáticamente)
+
